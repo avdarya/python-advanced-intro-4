@@ -1,6 +1,8 @@
+import math
 from datetime import datetime
+from typing import List
 
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Query, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -19,6 +21,14 @@ class SupportData(BaseModel):
 
 class UserResponseModel(BaseModel):
     data: UserData
+    support: SupportData
+
+class UsersResponseModel(BaseModel):
+    page: int
+    per_page: int
+    total: int
+    total_pages: int
+    data: List[UserData]
     support: SupportData
 
 class CreateUserRequestModel(BaseModel):
@@ -52,7 +62,16 @@ class UpdateUserResponseModel(BaseModel):
 # "База данных" для демонстрации
 fake_db = {
     2: {
-            "id": 2,
+        "id": 2,
+        "first_name": "Tobias",
+        "last_name": "Funke",
+        "email": "tobias.funke@reqres.in",
+        "avatar": "https://reqres.in/img/faces/9-image.jpg",
+        "created_at": "2025-05-25T23:49:07.709984",
+        "updated_at": "2025-05-25T23:49:07.709984",
+    },
+    3: {
+            "id": 3,
             "first_name": "Naomi",
             "last_name": "Wall",
             "email": "libero@hotmail.edu",
@@ -75,6 +94,32 @@ def get_user(user_id: int) -> UserResponseModel:
     result = UserResponseModel(data=UserData(**user), support=mock_support_data)
 
     return result
+
+@app.get("/api/users",  response_model=UsersResponseModel)
+def get_users(
+        page: int = Query(default=1),
+) -> UsersResponseModel:
+    if page < 1:
+        page = 1
+
+    per_page = 6
+    total = 12
+    total_pages = 2
+
+    user_list = [UserData(**user) for user in fake_db.values()]
+
+    support_url = "https://contentcaddy.io?utm_source=reqres&utm_medium=json&utm_campaign=referral"
+    support_text = "Tired of writing endless social media content? Let Content Caddy generate it for you."
+    mock_support_data = SupportData(url=support_url,text=support_text)
+
+    return UsersResponseModel(
+        page=page,
+        per_page=per_page,
+        total=total,
+        total_pages=total_pages,
+        data=user_list,
+        support=mock_support_data
+    )
 
 @app.post("/api/users", response_model=CreateUserResponseModel, status_code=201)
 def create_user(user: CreateUserRequestModel) -> CreateUserResponseModel:

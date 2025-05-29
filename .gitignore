@@ -54,5 +54,8 @@ venv.bak/
 # IDE
 .vscode/
 .idea/
+*.iml
+*.ipr
+*.iws
 *.swp
 *.swo

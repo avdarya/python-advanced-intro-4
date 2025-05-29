@@ -8,7 +8,7 @@ from single_user_schema import single_user
 url = "http://0.0.0.0:8000/api/users"
 
 @pytest.mark.parametrize("user_id", [2])
-def test_schema_validate_from_file(user_id):
+def test_single_user_schema_validate_from_file(user_id):
     response = requests.get(f"{url}/{user_id}")
     body = response.json()
 
@@ -17,7 +17,7 @@ def test_schema_validate_from_file(user_id):
         validate(body, schema=json.loads(f.read()))
 
 @pytest.mark.parametrize("user_id", [2])
-def test_schema_validate_from_variable(user_id):
+def test_single_user_schema_validate_from_variable(user_id):
     response = requests.get(f"{url}/{user_id}")
     body = response.json()
 
@@ -53,8 +53,36 @@ def test_user_not_found(user_id, message):
     body = response.json()
 
     assert "message" in body, "Response body does not contain 'message' key"
-
     assert body["message"] == message, f"Expected avatar {message}, but got {body['message']}"
+
+@pytest.mark.parametrize("page", [2])
+def test_users_schema_validate_from_file(page):
+    response = requests.get(url, params={"page":page})
+    body = response.json()
+
+    assert response.status_code == 200
+    with open("users.json") as f:
+        validate(body, schema=json.loads(f.read()))
+
+@pytest.mark.parametrize("page", [2])
+def test_users_by_page(page):
+    response = requests.get(url, params={"page":page})
+
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+
+    body = response.json()
+
+    assert body["page"] == page, f"Expected page {page}, but got {body['page']}"
+
+@pytest.mark.parametrize("expected_page", [1])
+def test_users_without_page(expected_page):
+    response = requests.get(url)
+
+    assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+
+    body = response.json()
+
+    assert body["page"] == expected_page, f"Expected page {expected_page}, but got {body['page']}"
 
 @pytest.mark.parametrize(
     "email, first_name, last_name, avatar",
@@ -63,9 +91,10 @@ def test_user_not_found(user_id, message):
 def test_create_user(email, first_name, last_name, avatar):
     response = requests.post(url, json={"email": email, "first_name": first_name, "last_name": last_name, "avatar": avatar})
 
+    assert response.status_code == 201, f"Expected status code 201, but got {response.status_code}"
+
     body = response.json()
 
-    assert response.status_code == 201, f"Expected status code 201, but got {response.status_code}"
     assert body["email"] == email, f"Expected email {email}, but got {body['email']}"
     assert body["first_name"] == first_name, f"Expected first_name {first_name}, but got {body['first_name']}"
     assert body["last_name"] == last_name, f"Expected last_name {last_name}, but got {body['last_name']}"
@@ -81,9 +110,10 @@ def test_create_user(email, first_name, last_name, avatar):
 def test_create_existing_email(email, first_name, last_name, avatar, message):
     response = requests.post(url, json={"email": email, "first_name": first_name, "last_name": last_name, "avatar": avatar})
 
+    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
+
     body = response.json()
 
-    assert response.status_code == 400, f"Expected status code 400, but got {response.status_code}"
     assert "message" in body, "Response body does not contain 'message' key"
     assert body["message"] == message, f"Expected message {message}, but got {body['message']}"
 
@@ -93,9 +123,11 @@ def test_create_existing_email(email, first_name, last_name, avatar, message):
 )
 def test_update_user(user_id, email, first_name, last_name, avatar):
     response = requests.put(url=f"{url}/{user_id}", json={"email": email, "first_name": first_name, "last_name": last_name, "avatar": avatar})
-    body = response.json()
 
     assert response.status_code == 200, f"Expected status code 200, but got {response.status_code}"
+
+    body = response.json()
+
     assert body["email"] == email, f"Expected email {email}, but got {body['email']}"
     assert body["first_name"] == first_name, f"Expected first_name {first_name}, but got {body['first_name']}"
     assert body["last_name"] == last_name, f"Expected last_name {last_name}, but got {body['last_name']}"
@@ -108,9 +140,11 @@ def test_update_user(user_id, email, first_name, last_name, avatar):
 )
 def test_update_not_existing_user(user_id, email, first_name, last_name, avatar, message):
     response = requests.put(url=f"{url}/{user_id}", json={"email": email, "first_name": first_name, "last_name": last_name, "avatar": avatar})
-    body = response.json()
 
     assert response.status_code == 404, f"Expected status code 404, but got {response.status_code}"
+
+    body = response.json()
+
     assert "message" in body, "Response body does not contain 'message' key"
     assert body["message"] == message, f"Expected message {message}, but got {body['message']}"
 
