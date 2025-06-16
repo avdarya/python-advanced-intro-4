@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import dotenv
 
 dotenv.load_dotenv()
@@ -9,12 +11,16 @@ from fastapi_pagination import Page, add_pagination, paginate, Params
 from http import HTTPStatus
 from pydantic import ValidationError
 
+from app.database.engine import create_db_and_tables
+from app.routers import status, users
 
-
-from routers import status, users
-from database.engine import create_db_and_tables
-
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("On startup")
+    create_db_and_tables()
+    yield
+    print("On shutdown")
+app = FastAPI(lifespan=lifespan)
 app.include_router(status.router)
 app.include_router(users.router)
 
@@ -34,5 +40,4 @@ async def handle_validation_error( request: Request, exc: ValidationError):
     )
 
 if __name__ == "__main__":
-    create_db_and_tables()
     uvicorn.run(app, host="0.0.0.0", port=8000)
