@@ -14,4 +14,10 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 COPY ./app /code/app
 
 
-CMD ["fastapi", "run", "app/main.py", "--port", "80"]
+COPY wait-for-db.sh /wait-for-db.sh
+
+
+RUN chmod +x /wait-for-db.sh
+
+
+CMD ["/wait-for-db.sh", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
