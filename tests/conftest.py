@@ -18,8 +18,11 @@ def app_url():
 
 @pytest.fixture(scope="module")
 def fill_test_data(app_url):
-    with open("../users.json") as f:
+    file_path = os.path.join(os.path.dirname(__file__), '..', 'users.json')
+    with open(file_path, 'r') as f:
         test_data_user = json.load(f)
+    # with open("../users.json") as f:
+    #     test_data_user = json.load(f)
     api_users = []
     for user in test_data_user:
         response = requests.post(f"{app_url}/api/users", json=user)
