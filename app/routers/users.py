@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from typing import Iterable
-
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.params import Depends
 from fastapi_pagination import Page, paginate, Params
@@ -35,7 +34,7 @@ def create_user(user_create: User) -> User:
     return users.create_user(user_create)
 
 @router.patch("/{user_id}", status_code=HTTPStatus.OK)
-def update_user(user_update: User, user_id: int) -> User:
+def update_user(user_update: User, user_id: int) -> type[User]:
     if user_id < 1:
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY)
     UserUpdate.model_validate(user_update.model_dump())

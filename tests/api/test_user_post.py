@@ -1,29 +1,36 @@
-from http import HTTPStatus
+from typing import Callable, Any
 
 import pytest
-import requests
+from http import HTTPStatus
 
-def test_create_user(app_url, user_payload_factory, created_user_cleanup):
+from app.models.User import UserCreate
+from clients.user_client import UserApiClient
+
+def test_create_user(
+        user_client: UserApiClient,
+        user_payload_factory: Callable[[],
+        dict[str, Any]],
+        created_user_cleanup: list[int]
+):
     user = user_payload_factory()
-    response = (requests.post(f"{app_url}/api/users", json=user))
+    user_obj = UserCreate(**user)
+
+    response = user_client.create_user_validated(user=user_obj)
+    assert response.status_code == HTTPStatus.CREATED, f"ERROR {response.status_code} {response.text}"
     body = response.json()
+
+    api_response = user_client.get_user(user_id=body["id"])
+    assert api_response.status_code == HTTPStatus.OK
+    api_user = api_response.json()
+
     created_user_cleanup.append(body["id"])
-    assert response.status_code == HTTPStatus.CREATED, f"Expected status code 201, but got {response.status_code}"
+
     assert "id" in body and isinstance(body["id"], int), f"Expected id: int = {body['id']}, but got {body['id']}"
     assert body["email"] == user["email"], f"Expected email {user['email']}, but got {body['email']}"
     assert body["first_name"] == user["first_name"], f"Expected first_name {user['first_name']}, but got {body['first_name']}"
     assert body["last_name"] == user["last_name"], f"Expected last_name {user['last_name']}, but got {body['last_name']}"
     assert body["avatar"] == user["avatar"], f"Expected avatar {user['avatar']}, but got {body['avatar']}"
 
-def test_create_then_get_user_returns_same_data(app_url, user_payload_factory, created_user_cleanup):
-    user = user_payload_factory()
-    response = requests.post(f"{app_url}/api/users", json=user)
-    assert response.status_code == HTTPStatus.CREATED
-    body = response.json()
-    api_response = requests.get(f"{app_url}/api/users/{body['id']}")
-    api_user = api_response.json()
-    created_user_cleanup.append(body["id"])
-    assert api_response.status_code == HTTPStatus.OK
     assert api_user["id"] == body["id"]
     assert api_user["email"] == user["email"]
     assert api_user["first_name"] == user["first_name"]
@@ -39,15 +46,15 @@ def test_create_then_get_user_returns_same_data(app_url, user_payload_factory, c
     ("michael.lawson@reqres", "invalid data"),
     ("tracey.ramos@", "invalid data")
 ])
-def test_create_user_invalid_email(app_url, email, err_msg):
+def test_create_user_invalid_email(user_client: UserApiClient, email: Any, err_msg: str):
     payload = {
         "email": email,
         "first_name": "test",
         "last_name": "invalidemail",
         "avatar": "https://example.com/avatar.jpg"
     }
-    response = (requests.post(f"{app_url}/api/users", json=payload))
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"Expected status code 400, but got {response.status_code}"
+    response = user_client.create_user_raw(user=payload)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
     body = response.json()
     assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
@@ -58,15 +65,15 @@ def test_create_user_invalid_email(app_url, email, err_msg):
     ("not-a-url", "invalid data"),
     ("www.example.com/avatar.jpg", "invalid data")
 ])
-def test_create_user_invalid_avatar_url(app_url, avatar_url, err_msg):
+def test_create_user_invalid_avatar_url(user_client: UserApiClient, avatar_url: Any, err_msg: str):
     payload = {
         "email": "test@example.com",
         "first_name": "test",
         "last_name": "invalidavatar",
         "avatar": avatar_url
     }
-    response = (requests.post(f"{app_url}/api/users", json=payload))
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"Expected status code 400, but got {response.status_code}"
+    response = user_client.create_user_raw(user=payload)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
     body = response.json()
     assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
@@ -92,21 +99,21 @@ def test_create_user_invalid_avatar_url(app_url, avatar_url, err_msg):
         "last_name": "Last"
     }),
 ])
-def test_create_user_missing_required_fields(app_url, err_msg, missing_field, payload):
-    response = requests.post(f"{app_url}/api/users", json=payload)
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"Expected status code 400, but got {response.status_code}"
+def test_create_user_missing_required_fields(user_client: UserApiClient, err_msg: str, missing_field: str, payload: dict):
+    response = user_client.create_user_raw(user=payload)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
     body = response.json()
     assert body["message"] == "invalid data", f"Missing field {missing_field} should trigger error"
 
-@pytest.mark.parametrize("detail", ["Method Not Allowed"])
-def test_create_user_invalid_method(app_url, detail):
+@pytest.mark.parametrize("detail, method", [("Method Not Allowed", "PATCH")])
+def test_create_user_invalid_method(user_client: UserApiClient, detail: str, method: str):
     payload = {
         "email": "test@example.com",
         "first_name": "test",
         "last_name": "invalidmethod",
         "avatar": "https://example.com/avatar.jpg"
     }
-    response = requests.patch(f"{app_url}/api/users", json=payload)
-    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED, f"Expected status code 405, but got {response.status_code}"
+    response = user_client.create_user_raw(user=payload, method=method)
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED, f"ERROR {response.status_code} {response.text}"
     body = response.json()
     assert body["detail"] == detail, f"Expected detail {detail}, but got {body['detail']}"
