@@ -21,7 +21,7 @@ def create_user(user: User) -> User:
         session.refresh(user)
         return user
 
-def update_user(user_id: int, user: User) -> Type[User]:
+def update_user(user_id: int, user: User) -> User:
     with Session(engine) as session:
         db_user = session.get(User, user_id)
         if not db_user:

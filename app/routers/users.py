@@ -34,10 +34,10 @@ def create_user(user_create: User) -> User:
     return users.create_user(user_create)
 
 @router.patch("/{user_id}", status_code=HTTPStatus.OK)
-def update_user(user_update: User, user_id: int) -> type[User]:
+def update_user(user_update: User, user_id: int) -> User:
     if user_id < 1:
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY)
-    UserUpdate.model_validate(user_update.model_dump())
+    UserUpdate.model_validate(user_update.model_dump(mode="json"))
     return users.update_user(user_id, user_update)
 
 @router.delete("/{user_id}", status_code=HTTPStatus.NO_CONTENT)
