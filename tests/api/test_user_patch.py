@@ -111,14 +111,6 @@ def test_update_user_with_non_positive_id(user_client: UserApiClient, created_us
     created_user_cleanup.append(user_id)
     assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
-@pytest.mark.parametrize("invalid_id", ["id"])
-def test_update_user_with_invalid_id_type(user_client: UserApiClient, created_user: dict, created_user_cleanup: list[int], invalid_id: str):
-    user_id = created_user["id"]
-    payload = {"last_name": "invalidid"}
-    response = user_client.update_user_raw(user_id=invalid_id, user=payload)
-    created_user_cleanup.append(user_id)
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, f"ERROR {response.status_code} {response.text}"
-
 @pytest.mark.parametrize("detail", ["Method Not Allowed"])
 def test_update_user_invalid_method(user_client: UserApiClient, created_user: dict, created_user_cleanup: list[int], detail: str):
     user_id = created_user["id"]

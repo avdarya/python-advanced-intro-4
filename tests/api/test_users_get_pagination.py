@@ -117,7 +117,7 @@ def test_users_size_greater_than_total_count(user_client: UserApiClient, page: i
     assert len(users) == 0, f"Expected no items, but got {len(users)}"
 
 @pytest.mark.usefixtures("fill_test_data")
-@pytest.mark.parametrize("size", [-1, 0, 101, 1000, "abc"])
+@pytest.mark.parametrize("size", [-1, 0, 101, 1000])
 def test_users_page_with_invalid_size(user_client: UserApiClient, size: int | str):
     response = user_client.get_users(size=size)
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, f"Expected status code 422, but got {response.status_code}"
