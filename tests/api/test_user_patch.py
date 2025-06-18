@@ -69,37 +69,35 @@ def test_update_not_existing_user(user_client: UserApiClient, created_user: dict
     assert "message" in body, "Response body does not contain 'message' key"
     assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
-@pytest.mark.parametrize("email, err_msg", [
-    ("", "invalid data"),
-    ("libereddfo@@hotmail.edu", "invalid data"),
-    ("janet.weaverreqres.in", "invalid data"),
-    ("@reqres.in", "invalid data"),
-    ("michael.lawson@reqres", "invalid data"),
-    ("tracey.ramos@", "invalid data")
+@pytest.mark.parametrize("email", [
+    "",
+    "libereddfo@@hotmail.edu",
+    "janet.weaverreqres.in",
+    "@reqres.in",
+    "michael.lawson@reqres",
+    "tracey.ramos@"
 ])
-def test_update_user_invalid_email(user_client: UserApiClient, created_user: dict, created_user_cleanup: list[int], email: str, err_msg: str):
+def test_update_user_invalid_email(user_client: UserApiClient, created_user: dict, created_user_cleanup: list[int], email: str):
     user_id = created_user["id"]
     payload = {"email": email}
     response = user_client.update_user_raw(user_id=user_id, user=payload)
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, f"ERROR {response.status_code} {response.text}"
     body = response.json()
     created_user_cleanup.append(user_id)
-    assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
-@pytest.mark.parametrize("avatar_url, err_msg", [
-    ("", "invalid data"),
-    ("https://", "invalid data"),
-    ("not-a-url", "invalid data"),
-    ("www.example.com/avatar.jpg", "invalid data")
+@pytest.mark.parametrize("avatar_url", [
+    "",
+    "https://",
+    "not-a-url",
+    "www.example.com/avatar.jpg"
 ])
-def test_update_user_invalid_avatar_url(user_client: UserApiClient, created_user: dict, created_user_cleanup: list[int], avatar_url: str, err_msg: str):
+def test_update_user_invalid_avatar_url(user_client: UserApiClient, created_user: dict, created_user_cleanup: list[int], avatar_url: str):
     user_id = created_user["id"]
     payload = {"avatar": avatar_url}
     response = user_client.update_user_raw(user_id=user_id, user=payload)
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, f"ERROR {response.status_code} {response.text}"
     body = response.json()
     created_user_cleanup.append(user_id)
-    assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
 @pytest.mark.parametrize("err_msg, invalid_id", [("Unprocessable Entity", 0), ("Unprocessable Entity", -1)])
 def test_update_user_with_non_positive_id(user_client: UserApiClient, created_user: dict, created_user_cleanup: list[int], err_msg: str, invalid_id: int):

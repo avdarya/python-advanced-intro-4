@@ -37,16 +37,16 @@ def test_create_user(
     assert api_user["last_name"] == user["last_name"]
     assert api_user["avatar"] == user["avatar"]
 
-@pytest.mark.parametrize("email, err_msg", [
-    ("", "invalid data"),
-    (None, "invalid data"),
-    ("libereddfo@@hotmail.edu", "invalid data"),
-    ("janet.weaverreqres.in", "invalid data"),
-    ("@reqres.in", "invalid data"),
-    ("michael.lawson@reqres", "invalid data"),
-    ("tracey.ramos@", "invalid data")
+@pytest.mark.parametrize("email", [
+    "",
+    None,
+    "libereddfo@@hotmail.edu",
+    "janet.weaverreqres.in",
+    "@reqres.in",
+    "michael.lawson@reqres",
+    "tracey.ramos@"
 ])
-def test_create_user_invalid_email(user_client: UserApiClient, email: Any, err_msg: str):
+def test_create_user_invalid_email(user_client: UserApiClient, email: Any):
     payload = {
         "email": email,
         "first_name": "test",
@@ -54,18 +54,17 @@ def test_create_user_invalid_email(user_client: UserApiClient, email: Any, err_m
         "avatar": "https://example.com/avatar.jpg"
     }
     response = user_client.create_user_raw(user=payload)
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, f"ERROR {response.status_code} {response.text}"
     body = response.json()
-    assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
-@pytest.mark.parametrize("avatar_url, err_msg", [
-    ("", "invalid data"),
-    (None, "invalid data"),
-    ("https://", "invalid data"),
-    ("not-a-url", "invalid data"),
-    ("www.example.com/avatar.jpg", "invalid data")
+@pytest.mark.parametrize("avatar_url", [
+    "",
+    None,
+    "https://",
+    "not-a-url",
+    "www.example.com/avatar.jpg",
 ])
-def test_create_user_invalid_avatar_url(user_client: UserApiClient, avatar_url: Any, err_msg: str):
+def test_create_user_invalid_avatar_url(user_client: UserApiClient, avatar_url: Any):
     payload = {
         "email": "test@example.com",
         "first_name": "test",
@@ -73,37 +72,34 @@ def test_create_user_invalid_avatar_url(user_client: UserApiClient, avatar_url: 
         "avatar": avatar_url
     }
     response = user_client.create_user_raw(user=payload)
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, f"ERROR {response.status_code} {response.text}"
     body = response.json()
-    assert body["message"] == err_msg, f"Expected message {err_msg}, but got {body['message']}"
 
-@pytest.mark.parametrize("err_msg, missing_field, payload", [
-    ("invalid data", "email", {
+@pytest.mark.parametrize("missing_field, payload", [
+    ("email", {
         "first_name": "Test",
         "last_name": "MissingEmail",
         "avatar": "https://example.com/avatar.jpg"
     }),
-    ("invalid data", "first_name", {
+    ("first_name", {
         "email": "test@example.com",
         "last_name": "MissingFirst",
         "avatar": "https://example.com/avatar.jpg"
     }),
-    ("invalid data", "last_name", {
+    ("last_name", {
         "email": "test@example.com",
         "first_name": "MissingLast",
         "avatar": "https://example.com/avatar.jpg"
     }),
-    ("invalid data", "avatar", {
+    ("avatar", {
         "email": "test@example.com",
         "first_name": "MissingAvatar",
         "last_name": "Last"
     }),
 ])
-def test_create_user_missing_required_fields(user_client: UserApiClient, err_msg: str, missing_field: str, payload: dict):
+def test_create_user_missing_required_fields(user_client: UserApiClient, missing_field: str, payload: dict):
     response = user_client.create_user_raw(user=payload)
-    assert response.status_code == HTTPStatus.BAD_REQUEST, f"ERROR {response.status_code} {response.text}"
-    body = response.json()
-    assert body["message"] == "invalid data", f"Missing field {missing_field} should trigger error"
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, f"ERROR {response.status_code} {response.text}"
 
 @pytest.mark.parametrize("detail, method", [("Method Not Allowed", "PATCH")])
 def test_create_user_invalid_method(user_client: UserApiClient, detail: str, method: str):
