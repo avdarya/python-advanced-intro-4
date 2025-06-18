@@ -26,7 +26,6 @@ app.include_router(status.router)
 app.include_router(users.router)
 
 app.add_exception_handler(HTTPException, http_user_exception_handler)
-app.add_exception_handler(RequestValidationError)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
