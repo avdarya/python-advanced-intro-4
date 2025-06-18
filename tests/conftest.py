@@ -47,8 +47,6 @@ def fill_test_data(user_client: UserApiClient) -> Generator[list[int], None, Non
     api_users = []
     for user in test_data_user:
         response = user_client.create_user_validated(user=UserCreate(**user))
-        print('FROM FIX')
-        print(response.text)
         api_users.append(response.json())
 
     user_ids = [user["id"] for user in api_users]
