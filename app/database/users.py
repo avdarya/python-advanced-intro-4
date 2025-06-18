@@ -3,7 +3,8 @@ from typing import Iterable, Type, Sequence
 from fastapi import HTTPException
 from sqlmodel import Session, select
 from .engine import engine
-from ..models.User import User
+from ..models.User import User, UserCreate
+
 
 def get_user(user_id: int) -> User | None:
     with Session(engine) as session:
@@ -14,12 +15,13 @@ def get_users() -> Sequence[User]:
         statement = select(User)
         return session.exec(statement).all()
 
-def create_user(user: User) -> User:
+def create_user(user: UserCreate) -> User:
+    new_user = User(**user.model_dump(mode="json"))
     with Session(engine) as session:
-        session.add(user)
+        session.add(new_user)
         session.commit()
-        session.refresh(user)
-        return user
+        session.refresh(new_user)
+        return new_user
 
 def update_user(user_id: int, user: User) -> User:
     with Session(engine) as session:

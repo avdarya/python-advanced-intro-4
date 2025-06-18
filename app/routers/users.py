@@ -29,7 +29,7 @@ def get_users(params: Params = Depends()) -> Iterable[User]:
     return paginate(users.get_users(), params)
 
 @router.post("/", status_code=HTTPStatus.CREATED)
-def create_user(user_create: User) -> User:
+def create_user(user_create: UserCreate) -> User:
     UserCreate.model_validate(user_create.model_dump())
     return users.create_user(user_create)
 
