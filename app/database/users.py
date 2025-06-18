@@ -9,7 +9,6 @@ def get_user(user_id: int) -> User | None:
     with Session(engine) as session:
         return session.get(User, user_id)
 
- # -> Iterable[User]
 def get_users() -> Sequence[User]:
     with Session(engine) as session:
         statement = select(User)

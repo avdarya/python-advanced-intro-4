@@ -1,7 +1,7 @@
 from requests import Response
 
 from config import Server
-from utils.base_session import BaseSession
+from app.utils.base_session import BaseSession
 
 class StatusApiClient:
     def __init__(self, env: str) -> None:

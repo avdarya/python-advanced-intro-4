@@ -4,7 +4,7 @@ from requests import Response
 
 from config import Server
 from settings import PaginationSettings
-from utils.base_session import BaseSession
+from app.utils.base_session import BaseSession
 from app.models.User import UserCreate, UserUpdate
 
 pagination_config = PaginationSettings()

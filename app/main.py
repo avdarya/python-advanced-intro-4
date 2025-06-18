@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 import dotenv
-from utils.exception_handlers import http_user_exception_handler, handle_validation_error
+from app.utils.exception_handlers import http_user_exception_handler, handle_validation_error
 
 dotenv.load_dotenv()
 
