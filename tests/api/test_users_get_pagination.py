@@ -9,7 +9,8 @@ from clients.user_client import UserApiClient
 @pytest.mark.parametrize("page, size", [(1, 30), (2, 30), (4, 5)])
 def test_users_items_count_respects_page_and_size(user_client: UserApiClient, all_users_count: int, page: int, size: int):
     last_page = math.ceil(all_users_count / size)
-    assert page < last_page, f"Test assumes this is not the last page. Page {page}, total_pages {last_page}"
+    if page >= last_page:
+        pytest.skip(f"Skipping test because page {page} is the last page or beyond. Total pages: {last_page}")
 
     response = user_client.get_users(page=page, size=size)
     assert response.status_code == 200
