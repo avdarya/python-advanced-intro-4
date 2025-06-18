@@ -21,7 +21,7 @@ jobs:
       - run: docker compose build
       - run: docker compose up -d
       - run: sleep 5
-      - run: pytest tests --junit-xml=test-results.xml
+      - run: pytest tests/api --junit-xml=test-results.xml --env=rc -s
         env:
           APP_URL: http://0.0.0.0:8002
 

@@ -40,5 +40,3 @@ class UserApiClient:
 
     def delete_user(self, user_id: Any) -> Response:
         return self.session.delete(f"/api/users/{user_id}")
-
-
