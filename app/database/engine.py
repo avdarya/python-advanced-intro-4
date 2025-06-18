@@ -5,7 +5,7 @@ from sqlmodel import create_engine, SQLModel, text
 
 engine = create_engine(os.getenv("DATABASE_ENGINE"), pool_size=int(os.getenv("DATABASE_POOL_SIZE", 10)))
 
-def create_db_and_tables():
+def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
 
 def check_db_availability() -> bool:

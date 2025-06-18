@@ -1,43 +1,31 @@
 from contextlib import asynccontextmanager
 
 import dotenv
+from app.utils.exception_handlers import http_user_exception_handler
 
 dotenv.load_dotenv()
 
 import uvicorn
-from fastapi import FastAPI, Request, Response, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi_pagination import Page, add_pagination, paginate, Params
-from http import HTTPStatus
-from pydantic import ValidationError
+
+from fastapi import FastAPI, HTTPException
+from fastapi_pagination import add_pagination
+from fastapi.exceptions import RequestValidationError
 
 from app.database.engine import create_db_and_tables
 from app.routers import status, users
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(application: FastAPI):
     print("On startup")
     create_db_and_tables()
+    add_pagination(application)
     yield
     print("On shutdown")
 app = FastAPI(lifespan=lifespan)
 app.include_router(status.router)
 app.include_router(users.router)
 
-add_pagination(app)
-
-@app.exception_handler(HTTPException)
-async def http_user_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"message": f"{exc.detail}"},
-    )
-@app.exception_handler(ValidationError)
-async def handle_validation_error( request: Request, exc: ValidationError):
-    return JSONResponse(
-        status_code=HTTPStatus.BAD_REQUEST,
-        content={"message": "invalid data"}
-    )
+app.add_exception_handler(HTTPException, http_user_exception_handler)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
